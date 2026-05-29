@@ -79,8 +79,7 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
       if (clashes.length > 0) {
         const names = clashes.map((c) => c.title).join(", ");
         toast({
-          title: "⚠️ Installer clash detected",
-          description: `Date overlaps with: ${names}`,
+          title: `⚠️ Installer clash detected — overlaps with: ${names}`,
           variant: "destructive",
         });
         return;
