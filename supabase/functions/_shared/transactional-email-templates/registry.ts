@@ -18,6 +18,7 @@ import { template as contactNotification } from './contact-notification.tsx'
 import { template as estimateConfirmation } from './estimate-confirmation.tsx'
 import { template as estimateNotification } from './estimate-notification.tsx'
 import { template as assignmentNotification } from './assignment-notification.tsx'
+import { template as migrationNotice } from './migration-notice.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'contact-confirmation': contactConfirmation,
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'estimate-confirmation': estimateConfirmation,
   'estimate-notification': estimateNotification,
   'assignment-notification': assignmentNotification,
+  'migration-notice': migrationNotice,
 }

@@ -16,6 +16,14 @@ export function HashRedirect() {
 
     if (hash.includes("type=invite") || hash.includes("type=recovery")) {
       navigate("/reset-password" + hash, { replace: true });
+      return;
+    }
+
+    // Supabase error hashes (#error=access_denied&error_code=otp_expired...)
+    if (hash.includes("error=")) {
+      const params = new URLSearchParams(hash.slice(1));
+      const errorCode = params.get("error_code") ?? params.get("error") ?? "link_invalid";
+      navigate("/login?error=" + errorCode, { replace: true });
     }
   }, [location.pathname, navigate]);
 
