@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { HashRedirect } from "@/components/HashRedirect";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
@@ -47,7 +48,9 @@ function AppRoutes() {
   if (loading) return null;
   const home = roleHome(profile?.role);
   return (
-    <Routes>
+    <>
+      <HashRedirect />
+      <Routes>
       <Route path="/login" element={user && home ? <Navigate to={home} replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<RequireRole roles={ADMIN_ROLES}><Dashboard /></RequireRole>} />
@@ -56,6 +59,7 @@ function AppRoutes() {
       <Route path="/installations" element={<RequireRole roles={ALL_ROLES}><InstallationsShell /></RequireRole>} />
       <Route path="*" element={<Navigate to={home ?? "/"} replace />} />
     </Routes>
+    </>
   );
 }
 

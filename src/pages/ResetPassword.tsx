@@ -9,9 +9,17 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const isInvite = window.location.hash.includes("type=invite");
 
-  // Supabase sends the session in the URL fragment — wait for the auth state to resolve
+  // Supabase sends the session in the URL fragment.
+  // For password recovery: wait for the PASSWORD_RECOVERY auth event.
+  // For invites: the user is already signed in when the hash is processed — check the hash directly.
   useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery") || hash.includes("type=invite")) {
+      setReady(true);
+      return;
+    }
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setReady(true);
@@ -55,8 +63,14 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow w-full max-w-sm">
-        <h1 className="text-xl font-semibold mb-2 text-gray-900">Set new password</h1>
-        <p className="text-sm text-gray-500 mb-6">Choose a new password for your account.</p>
+        <h1 className="text-xl font-semibold mb-2 text-gray-900">
+          {isInvite ? "Create your password" : "Set new password"}
+        </h1>
+        <p className="text-sm text-gray-500 mb-6">
+          {isInvite
+            ? "Choose a password to activate your WCI team account."
+            : "Choose a new password for your account."}
+        </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">New password</label>
@@ -86,7 +100,7 @@ export default function ResetPassword() {
             disabled={loading}
             className="w-full bg-gray-900 text-white py-2 rounded text-sm font-medium hover:bg-gray-700 disabled:opacity-50"
           >
-            {loading ? "Saving…" : "Set password"}
+            {loading ? "Saving…" : isInvite ? "Create account" : "Set password"}
           </button>
         </form>
       </div>
