@@ -11,43 +11,68 @@ const LOGO_URL = `${SITE_URL}/wci-logo.png`
 const INSTAGRAM_URL = 'https://www.instagram.com/wciwallpapers/'
 const LINKEDIN_URL = 'https://www.linkedin.com/company/wci-wallpapers'
 
-interface InviteEmailProps { siteName: string; siteUrl: string; confirmationUrl: string }
+interface InviteEmailProps { siteName: string; siteUrl: string; confirmationUrl: string; context?: string }
 
-export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>You{"\u2019"}ve been invited to join WCI Wallpapers</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Img src={LOGO_URL} alt="WCI Wallpapers" width="120" height="auto" style={logo} />
-        <Hr style={divider} />
-        <Heading style={h1}>You{"\u2019"}ve been invited</Heading>
-        <Text style={text}>
-          You{"\u2019"}ve been invited to join{' '}
+export const InviteEmail = ({ siteName, siteUrl, confirmationUrl, context }: InviteEmailProps) => {
+  const isExistingClient = context === 'existing_client'
+
+  const previewText = isExistingClient
+    ? 'Action required — update your WCI Wallpapers password'
+    : "You\u2019ve been invited to join WCI Wallpapers"
+
+  const heading = isExistingClient ? 'Update your password' : "You\u2019ve been invited"
+
+  const bodyLines = isExistingClient
+    ? [
+        <>We\u2019re migrating to a new, more secure platform. Your account and any saved moodboards or preferences have been carried over and are safe.</>,
+        <>To continue accessing your account after the upgrade, you\u2019ll need to set a new password. This is a one-time step \u2014 it only takes a moment.</>,
+      ]
+    : [
+        <>You\u2019ve been invited to join{' '}
           <Link href={siteUrl} style={link}><strong>WCI Wallpapers</strong></Link>.
-          Click the button below to accept the invitation and create your account.
-        </Text>
-        <Section style={buttonSection}>
-          <Button style={button} href={confirmationUrl}>Accept Invitation</Button>
-        </Section>
-        <Hr style={divider} />
-        <Text style={footer}>If you weren{"\u2019"}t expecting this invitation, you can safely ignore this email.</Text>
-        <Section style={socialSection}>
-          <Row>
-            <Column align="left">
-              <Link href={SITE_URL} style={siteLink}>wallcoverings.co.za</Link>
-            </Column>
-            <Column align="right">
-              <Link href={INSTAGRAM_URL} style={socialLink}>Instagram</Link>
-              <Text style={socialDot}>{"\u00A0\u00A0\u2022\u00A0\u00A0"}</Text>
-              <Link href={LINKEDIN_URL} style={socialLink}>LinkedIn</Link>
-            </Column>
-          </Row>
-        </Section>
-      </Container>
-    </Body>
-  </Html>
-)
+          Click the button below to set your password and get started.</>,
+      ]
+
+  const buttonLabel = isExistingClient ? 'SET YOUR PASSWORD' : 'ACCEPT INVITATION'
+
+  const footerText = isExistingClient
+    ? "If you don\u2019t complete this step before our upgrade, you\u2019ll still be able to register again \u2014 but please get in touch and we\u2019ll restore your saved data manually."
+    : "If you weren\u2019t expecting this invitation, you can safely ignore this email."
+
+  return (
+    <Html lang="en" dir="ltr">
+      <Head />
+      <Preview>{previewText}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Img src={LOGO_URL} alt="WCI Wallpapers" width="120" height="auto" style={logo} />
+          <Hr style={divider} />
+          <Heading style={h1}>{heading}</Heading>
+          {bodyLines.map((line, i) => (
+            <Text key={i} style={text}>{line}</Text>
+          ))}
+          <Section style={buttonSection}>
+            <Button style={button} href={confirmationUrl}>{buttonLabel}</Button>
+          </Section>
+          <Hr style={divider} />
+          <Text style={footer}>{footerText}</Text>
+          <Section style={socialSection}>
+            <Row>
+              <Column align="left">
+                <Link href={SITE_URL} style={siteLink}>wallcoverings.co.za</Link>
+              </Column>
+              <Column align="right">
+                <Link href={INSTAGRAM_URL} style={socialLink}>Instagram</Link>
+                <Text style={socialDot}>{"\u00A0\u00A0\u2022\u00A0\u00A0"}</Text>
+                <Link href={LINKEDIN_URL} style={socialLink}>LinkedIn</Link>
+              </Column>
+            </Row>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default InviteEmail
 

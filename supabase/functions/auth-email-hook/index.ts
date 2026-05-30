@@ -128,6 +128,14 @@ Deno.serve(async (req) => {
     )
   }
 
+  const context: string = user.user_metadata?.context ?? ''
+
+  // Subject is context-aware for invites
+  let subject = EMAIL_SUBJECTS[emailType] ?? emailType
+  if (emailType === 'invite' && context === 'existing_client') {
+    subject = 'Action required — update your WCI Wallpapers password'
+  }
+
   // Build the confirmation URL from the token hash
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const redirectTo = emailData.redirect_to || `https://${ROOT_DOMAIN}`
@@ -141,6 +149,7 @@ Deno.serve(async (req) => {
     token: emailData.token,
     email: user.email,
     newEmail: user.new_email || '',
+    context,
   }
 
   const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
@@ -170,7 +179,7 @@ Deno.serve(async (req) => {
       to: user.email,
       from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+      subject: subject,
       html,
       text,
       purpose: 'transactional',

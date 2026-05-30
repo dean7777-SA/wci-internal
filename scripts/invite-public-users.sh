@@ -16,7 +16,7 @@ invite() {
     -H "apikey: ${SERVICE_KEY}" \
     -H "Authorization: Bearer ${SERVICE_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"email\":\"${EMAIL}\",\"redirect_to\":\"${REDIRECT}\",\"data\":{\"full_name\":\"${NAME}\"}}")
+    -d "{\"email\":\"${EMAIL}\",\"redirect_to\":\"${REDIRECT}\",\"data\":{\"full_name\":\"${NAME}\",\"context\":\"existing_client\"}}")
 
   HTTP_CODE=$(echo "$RESPONSE" | tail -1)
   BODY=$(echo "$RESPONSE" | head -n -1)
