@@ -15,29 +15,43 @@ interface InviteEmailProps { siteName: string; siteUrl: string; confirmationUrl:
 
 export const InviteEmail = ({ siteName, siteUrl, confirmationUrl, context }: InviteEmailProps) => {
   const isExistingClient = context === 'existing_client'
+  const isTeam = context === 'team'
 
   const previewText = isExistingClient
-    ? 'Action required — update your WCI Wallpapers password'
-    : "You\u2019ve been invited to join WCI Wallpapers"
+    ? 'Action required \u2014 update your WCI Wallpapers password'
+    : isTeam
+      ? 'You\u2019ve been invited to the WCI Wallpapers team portal'
+      : "You\u2019ve been invited to join WCI Wallpapers"
 
-  const heading = isExistingClient ? 'Update your password' : "You\u2019ve been invited"
+  const heading = isExistingClient
+    ? 'Update your password'
+    : isTeam
+      ? 'Welcome to the team'
+      : "You\u2019ve been invited"
 
   const bodyLines = isExistingClient
     ? [
         <>We\u2019re migrating to a new, more secure platform. Your account and any saved moodboards or preferences have been carried over and are safe.</>,
         <>To continue accessing your account after the upgrade, you\u2019ll need to set a new password. This is a one-time step \u2014 it only takes a moment.</>,
       ]
-    : [
-        <>You\u2019ve been invited to join{' '}
-          <Link href={siteUrl} style={link}><strong>WCI Wallpapers</strong></Link>.
-          Click the button below to set your password and get started.</>,
-      ]
+    : isTeam
+      ? [
+          <>You\u2019ve been invited to the <Link href="https://wci-internal.vercel.app" style={link}><strong>WCI Wallpapers team portal</strong></Link> \u2014 your workspace for managing sales, client projects, and product enquiries.</>,
+          <>Set your password below to get started.</>,
+        ]
+      : [
+          <>You\u2019ve been invited to join{' '}
+            <Link href={siteUrl} style={link}><strong>WCI Wallpapers</strong></Link>.
+            Click the button below to set your password and get started.</>,
+        ]
 
-  const buttonLabel = isExistingClient ? 'SET YOUR PASSWORD' : 'ACCEPT INVITATION'
+  const buttonLabel = isExistingClient ? 'SET YOUR PASSWORD' : isTeam ? 'SET YOUR PASSWORD' : 'ACCEPT INVITATION'
 
   const footerText = isExistingClient
     ? "If you don\u2019t complete this step before our upgrade, you\u2019ll still be able to register again \u2014 but please get in touch and we\u2019ll restore your saved data manually."
-    : "If you weren\u2019t expecting this invitation, you can safely ignore this email."
+    : isTeam
+      ? "If you weren\u2019t expecting this invitation, please contact dean@wallcoverings.co.za."
+      : "If you weren\u2019t expecting this invitation, you can safely ignore this email."
 
   return (
     <Html lang="en" dir="ltr">

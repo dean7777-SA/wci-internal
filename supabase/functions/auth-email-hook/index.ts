@@ -133,7 +133,9 @@ Deno.serve(async (req) => {
   // Subject is context-aware for invites
   let subject = EMAIL_SUBJECTS[emailType] ?? emailType
   if (emailType === 'invite' && context === 'existing_client') {
-    subject = 'Action required — update your WCI Wallpapers password'
+    subject = 'Action required \u2014 update your WCI Wallpapers password'
+  } else if (emailType === 'invite' && context === 'team') {
+    subject = "You've been invited to the WCI Wallpapers portal"
   }
 
   // Build the confirmation URL from the token hash
