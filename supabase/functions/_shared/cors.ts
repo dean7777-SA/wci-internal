@@ -1,11 +1,17 @@
-// Shared CORS utility — restricts Access-Control-Allow-Origin to known internal origins.
+// Shared CORS utility — restricts Access-Control-Allow-Origin to known origins.
 
 const ALLOWED_ORIGINS = [
+  // Local development
   'http://localhost:5173',
   'http://localhost:4173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:4173',
+  // Production
+  'https://wci-internal.vercel.app',
+  'https://www.wallcoverings.co.za',
+  'https://wallcoverings.co.za',
+  'https://wp-wonderland-connect.vercel.app',
 ]
 
 const BASE_HEADERS: Record<string, string> = {
