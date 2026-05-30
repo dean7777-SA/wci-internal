@@ -3,7 +3,8 @@
 # Run from anywhere: bash scripts/invite-public-users.sh
 
 PROJECT_URL="https://ufjvcpshkmrdqayjrwkh.supabase.co"
-SERVICE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmanZjcHNoa21yZHFheWpyd2toIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODg1OTI5MSwiZXhwIjoyMDk0NDM1MjkxfQ.oe5Lu_nOSvY8Q5f9gbFUWG1ywoU5791159c-vJHZ9lg"
+# Export this before running: export SUPABASE_SERVICE_KEY="your-service-role-key"
+SERVICE_KEY="${SUPABASE_SERVICE_KEY:?SUPABASE_SERVICE_KEY env var is not set}"
 REDIRECT="https://www.wallcoverings.co.za"
 
 invite() {
