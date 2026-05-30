@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Login from "@/pages/Login";
+import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
 import SalesDashboard from "@/pages/SalesDashboard";
 import { ProjectsDashboard } from "@/features/projects/ProjectsDashboard";
@@ -11,20 +12,33 @@ const ADMIN_ROLES = ["admin"] as const;
 const SALES_ROLES = ["admin", "sales"] as const;
 const ALL_ROLES = ["admin", "sales", "installer"] as const;
 
-function roleHome(role: string | null | undefined) {
+// Returns the home route for recognized wci-internal roles, or null for public 'user' role.
+function roleHome(role: string | null | undefined): string | null {
   if (role === "admin") return "/";
   if (role === "sales") return "/sales";
-  return "/installations"; // installer + unknown
+  if (role === "installer") return "/installations";
+  return null; // 'user' or unknown — no wci-internal access
+}
+
+function AccessDenied() {
+  const { signOut } = useAuth();
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-sm text-red-500">Access denied. Contact an administrator.</p>
+      <button onClick={signOut} className="text-sm text-gray-500 hover:text-gray-900 underline">Sign out</button>
+    </div>
+  );
 }
 
 // Require user to be logged in with one of the allowed roles.
-// Unauthorized roles are redirected to their own home page.
+// Unauthorized roles are shown an access denied screen instead of redirected.
 function RequireRole({ children, roles }: { children: React.ReactNode; roles: readonly string[] }) {
   const { user, loading, profile } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (!profile) return <div className="min-h-screen flex items-center justify-center text-sm text-red-500">Access denied. Contact an administrator.</div>;
-  if (!roles.includes(profile.role ?? "")) return <Navigate to={roleHome(profile.role)} replace />;
+  const home = roleHome(profile?.role);
+  if (!profile || !home) return <AccessDenied />; // no profile or unrecognized role (e.g. public 'user')
+  if (!roles.includes(profile.role ?? "")) return <Navigate to={home} replace />;
   return <>{children}</>;
 }
 
@@ -34,12 +48,13 @@ function AppRoutes() {
   const home = roleHome(profile?.role);
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to={home} replace /> : <Login />} />
+      <Route path="/login" element={user && home ? <Navigate to={home} replace /> : <Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<RequireRole roles={ADMIN_ROLES}><Dashboard /></RequireRole>} />
       <Route path="/sales" element={<RequireRole roles={SALES_ROLES}><SalesDashboardShell /></RequireRole>} />
       <Route path="/projects" element={<RequireRole roles={SALES_ROLES}><ProjectsDashboardShell /></RequireRole>} />
       <Route path="/installations" element={<RequireRole roles={ALL_ROLES}><InstallationsShell /></RequireRole>} />
-      <Route path="*" element={<Navigate to={home} replace />} />
+      <Route path="*" element={<Navigate to={home ?? "/"} replace />} />
     </Routes>
   );
 }

@@ -1,4 +1,3 @@
-import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const MAX_RETRIES = 5
@@ -68,7 +67,7 @@ async function moveToDlq(
 }
 
 Deno.serve(async (req) => {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
+  const apiKey = Deno.env.get('RESEND_API_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -209,23 +208,26 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendLovableEmail(
-          {
-            run_id: payload.run_id,
-            to: payload.to,
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             from: payload.from,
-            sender_domain: payload.sender_domain,
+            to: [payload.to],
             subject: payload.subject,
             html: payload.html,
-            text: payload.text,
-            purpose: payload.purpose,
-            label: payload.label,
-            idempotency_key: payload.idempotency_key,
-            unsubscribe_token: payload.unsubscribe_token,
-            message_id: payload.message_id,
-          },
-          { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
-        )
+            text: payload.text ?? undefined,
+          }),
+        })
+        if (!resendRes.ok) {
+          const body = await resendRes.json().catch(() => ({}))
+          const err = new Error(`Resend error ${resendRes.status}: ${JSON.stringify(body)}`)
+          ;(err as any).status = resendRes.status
+          throw err
+        }
 
         await (supabase as any).from('email_send_log').insert({
           message_id: payload.message_id,
