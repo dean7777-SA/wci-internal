@@ -8,7 +8,6 @@
 
 set -euo pipefail
 
-KEY="${SUPABASE_SERVICE_KEY:?SUPABASE_SERVICE_KEY env var is not set}"
 FUNCTION_URL="https://ufjvcpshkmrdqayjrwkh.supabase.co/functions/v1/send-transactional-email"
 PUBLIC_URL="https://www.wallcoverings.co.za"
 TEAM_URL="https://wci-internal.vercel.app"
@@ -22,7 +21,6 @@ send_notice() {
   echo "Sending migration notice to ${EMAIL} (${CONTEXT})..."
 
   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${FUNCTION_URL}" \
-    -H "Authorization: Bearer ${KEY}" \
     -H "Content-Type: application/json" \
     -d "{
       \"templateName\": \"migration-notice\",
