@@ -62,27 +62,58 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
 
     // Clash detection
     if (!form.date_tbc && form.scheduled_date && (form.installers ?? []).length > 0) {
-      const newStart = new Date(form.scheduled_date);
-      const newEnd = form.scheduled_end_date ? new Date(form.scheduled_end_date) : new Date(form.scheduled_date);
-      newStart.setHours(0, 0, 0, 0);
-      newEnd.setHours(23, 59, 59, 999);
-      const clashes = allInstallations.filter((other) => {
+      const newDateStart = new Date(form.scheduled_date);
+      const newDateEnd = form.scheduled_end_date ? new Date(form.scheduled_end_date) : new Date(form.scheduled_date);
+      newDateStart.setHours(0, 0, 0, 0);
+      newDateEnd.setHours(23, 59, 59, 999);
+
+      // Find all same-day clashes for any of the selected installers
+      const sameDayClashes = allInstallations.filter((other) => {
         if (!other.scheduled_date || other.date_tbc) return false;
-        const otherStart = new Date(other.scheduled_date);
-        const otherEnd = other.scheduled_end_date ? new Date(other.scheduled_end_date) : new Date(other.scheduled_date);
-        otherStart.setHours(0, 0, 0, 0);
-        otherEnd.setHours(23, 59, 59, 999);
-        const overlaps = !(otherEnd < newStart || otherStart > newEnd);
-        if (!overlaps) return false;
+        const otherDateStart = new Date(other.scheduled_date);
+        const otherDateEnd = other.scheduled_end_date ? new Date(other.scheduled_end_date) : new Date(other.scheduled_date);
+        otherDateStart.setHours(0, 0, 0, 0);
+        otherDateEnd.setHours(23, 59, 59, 999);
+        const datesOverlap = !(otherDateEnd < newDateStart || otherDateStart > newDateEnd);
+        if (!datesOverlap) return false;
         return (other.installers ?? []).some((name) => form.installers!.includes(name));
       });
-      if (clashes.length > 0) {
-        const names = clashes.map((c) => c.title).join(", ");
-        toast({
-          title: `⚠️ Installer clash detected — overlaps with: ${names}`,
-          variant: "destructive",
+
+      if (sameDayClashes.length > 0) {
+        // Helper: convert "HH:MM" to total minutes
+        const toMins = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+        const newTs = form.scheduled_time_start ? toMins(form.scheduled_time_start) : null;
+        const newTe = form.scheduled_time_end ? toMins(form.scheduled_time_end) : null;
+
+        // Separate true time conflicts from same-day non-overlapping jobs
+        const timeConflicts = sameDayClashes.filter((other) => {
+          if (!other.scheduled_time_start || !other.scheduled_time_end || newTs === null || newTe === null) return false;
+          const otherTs = toMins(other.scheduled_time_start);
+          const otherTe = toMins(other.scheduled_time_end);
+          return !(newTe <= otherTs || newTs >= otherTe);
         });
-        return;
+
+        if (timeConflicts.length > 0) {
+          // Hard block — times overlap
+          const names = timeConflicts.map((c) => `${c.title} (${c.scheduled_time_start}–${c.scheduled_time_end})`).join(", ");
+          toast({
+            title: `⛔ Time conflict — overlaps with: ${names}`,
+            description: "Please revise the scheduled time before saving.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Same day, no time conflict — informational notice only, allow save
+        const names = sameDayClashes.map((c) => {
+          const time = c.scheduled_time_start ? ` (${c.scheduled_time_start}${c.scheduled_time_end ? `–${c.scheduled_time_end}` : ""})` : "";
+          return `${c.title}${time}`;
+        }).join(", ");
+        toast({
+          title: `ℹ️ Installer has another job today — ${names}`,
+          variant: "default",
+        });
+        // Continue saving
       }
     }
 
