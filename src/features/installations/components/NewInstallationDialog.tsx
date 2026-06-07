@@ -97,8 +97,7 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
           // Hard block — times overlap
           const names = timeConflicts.map((c) => `${c.title} (${c.scheduled_time_start}–${c.scheduled_time_end})`).join(", ");
           toast({
-            title: `⛔ Time conflict — overlaps with: ${names}`,
-            description: "Please revise the scheduled time before saving.",
+            title: `⛔ Time conflict with ${names} — please revise the time before saving.`,
             variant: "destructive",
           });
           return;
