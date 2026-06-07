@@ -27,6 +27,7 @@ const inputClass = "w-full px-3 py-2 rounded-lg border border-gray-200 text-sm t
 
 export function NewInstallationDialog({ open, onClose, onCreated, allInstallations = [] }: NewInstallationDialogProps) {
   const [form, setForm] = useState<NewInstallationInput>({ ...empty });
+  const [notifyInstallers, setNotifyInstallers] = useState(true);
   const { toast } = useToast();
   const create = useCreateInstallation();
   const { data: projects = [] } = useProjects();
@@ -53,7 +54,7 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
     }
   }
 
-  async function handleSubmit(e: React.FormEvent, notify = false) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim()) {
       toast({ title: "Title is required", variant: "destructive" });
@@ -133,7 +134,7 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
         owner: form.owner || undefined,
       };
       const created = await create.mutateAsync(payload);
-      if (notify && !form.date_tbc && form.scheduled_date && (form.installers ?? []).length > 0) {
+      if (notifyInstallers && !form.date_tbc && form.scheduled_date && (form.installers ?? []).length > 0) {
         const { supabase } = await import("@/lib/supabase");
         const { error } = await supabase.functions.invoke("notify-installers", {
           body: { installation_id: created.id },
@@ -305,24 +306,26 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
                   <textarea value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} rows={2} className={`${inputClass} resize-none`} />
                 </Field>
 
-                <div className="flex gap-3 pt-2 pb-2">
+                {/* Notify installers toggle */}
+                <div className="flex items-center gap-3 pt-1">
+                  <button type="button" onClick={() => setNotifyInstallers((v) => !v)}
+                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${notifyInstallers ? "bg-green-600" : "bg-gray-200"}`}>
+                    <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${notifyInstallers ? "translate-x-5" : "translate-x-0"}`} />
+                  </button>
+                  <label className="text-sm text-gray-600 cursor-pointer" onClick={() => setNotifyInstallers((v) => !v)}>
+                    Notify installers
+                  </label>
+                </div>
+
+                <div className="flex gap-3 pt-1 pb-2">
                   <button type="button" onClick={onClose} className="flex-1 text-sm py-2.5 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-900 transition-colors">
                     Cancel
                   </button>
                   <button type="submit" disabled={create.isPending}
                     className="flex-1 text-sm py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors disabled:opacity-40">
-                    {create.isPending ? "Creating…" : "+ Add Installation"}
+                    {create.isPending ? "Scheduling…" : "Schedule Installation"}
                   </button>
                 </div>
-                {!form.date_tbc && form.scheduled_date && (form.installers ?? []).length > 0 && (
-                  <button
-                    type="button"
-                    disabled={create.isPending}
-                    onClick={(e) => handleSubmit(e as unknown as React.FormEvent, true)}
-                    className="w-full text-sm py-2.5 rounded-lg bg-green-700 text-white hover:bg-green-800 transition-colors disabled:opacity-40">
-                    {create.isPending ? "Creating…" : "Create & Notify Installers"}
-                  </button>
-                )}
               </form>
             </div>
           </motion.div>

@@ -1,8 +1,9 @@
-// Minimal toast shim — logs to console. Replace with a real toast library later.
+import { toast as sonnerToast } from "sonner";
+
 export function useToast() {
   function toast({ title, variant }: { title: string; variant?: "destructive" | "default" }) {
-    if (variant === "destructive") console.error("[toast]", title);
-    else console.log("[toast]", title);
+    if (variant === "destructive") sonnerToast.error(title);
+    else sonnerToast.success(title);
   }
   return { toast };
 }

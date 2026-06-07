@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { Toaster } from "sonner";
 import { HashRedirect } from "@/components/HashRedirect";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
@@ -136,6 +137,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster />
       </AuthProvider>
     </BrowserRouter>
   );
