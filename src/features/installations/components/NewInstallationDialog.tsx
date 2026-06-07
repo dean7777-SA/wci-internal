@@ -25,6 +25,29 @@ const empty: NewInstallationInput = {
 
 const inputClass = "w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-300 bg-white";
 
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 07–18
+const MINUTES = ["00", "15", "30", "45"];
+
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [h, m] = value ? value.split(":") : ["", ""];
+  const selectClass = "flex-1 px-2 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-300 bg-white";
+  const handleH = (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value ? `${e.target.value}:${m || "00"}` : "");
+  const handleM = (e: React.ChangeEvent<HTMLSelectElement>) => onChange(h ? `${h}:${e.target.value}` : "");
+  return (
+    <div className="flex gap-1 items-center">
+      <select value={h} onChange={handleH} className={selectClass}>
+        <option value="">HH</option>
+        {HOURS.map((hr) => <option key={hr} value={String(hr).padStart(2, "0")}>{String(hr).padStart(2, "0")}</option>)}
+      </select>
+      <span className="text-gray-400 text-sm font-medium">:</span>
+      <select value={m} onChange={handleM} className={selectClass} disabled={!h}>
+        <option value="">MM</option>
+        {MINUTES.map((min) => <option key={min} value={min}>{min}</option>)}
+      </select>
+    </div>
+  );
+}
+
 export function NewInstallationDialog({ open, onClose, onCreated, allInstallations = [] }: NewInstallationDialogProps) {
   const [form, setForm] = useState<NewInstallationInput>({ ...empty });
   const [notifyInstallers, setNotifyInstallers] = useState(true);
@@ -136,13 +159,25 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
       const created = await create.mutateAsync(payload);
       if (notifyInstallers && !form.date_tbc && form.scheduled_date && (form.installers ?? []).length > 0) {
         const { supabase } = await import("@/lib/supabase");
-        const { error } = await supabase.functions.invoke("notify-installers", {
+        const { data, error } = await supabase.functions.invoke("notify-installers", {
           body: { installation_id: created.id },
         });
         if (error) {
-          toast({ title: "Installation created — WhatsApp failed to send", variant: "destructive" });
+          toast({ title: "Installation created — notifications failed to send", variant: "destructive" });
         } else {
-          toast({ title: "Installation created & installers notified" });
+          const emailsSent   = data?.emailsSent   ?? 0;
+          const waLinks: { name: string; url: string }[] = data?.waLinks ?? [];
+
+          // Build summary toast
+          const parts: string[] = [];
+          if (emailsSent > 0) parts.push(`${emailsSent} email${emailsSent > 1 ? "s" : ""} sent`);
+          if (waLinks.length > 0) parts.push(`WhatsApp links ready`);
+          toast({ title: `Installation created${parts.length ? ` — ${parts.join(", ")}` : ""}` });
+
+          // Open wa.me links for manual send (one per installer)
+          for (const link of waLinks) {
+            window.open(link.url, "_blank", "noopener,noreferrer");
+          }
         }
       } else {
         toast({ title: "Installation created" });
@@ -225,10 +260,10 @@ export function NewInstallationDialog({ open, onClose, onCreated, allInstallatio
                       <input type="date" value={form.scheduled_end_date ?? ""} min={form.scheduled_date || undefined} onChange={(e) => set("scheduled_end_date", e.target.value)} className={inputClass} />
                     </Field>
                     <Field label="Start Time">
-                      <input type="time" value={form.scheduled_time_start ?? ""} onChange={(e) => set("scheduled_time_start", e.target.value)} className={inputClass} />
+                      <TimeSelect value={form.scheduled_time_start ?? ""} onChange={(v) => set("scheduled_time_start", v)} />
                     </Field>
                     <Field label="End Time">
-                      <input type="time" value={form.scheduled_time_end ?? ""} onChange={(e) => set("scheduled_time_end", e.target.value)} className={inputClass} />
+                      <TimeSelect value={form.scheduled_time_end ?? ""} onChange={(v) => set("scheduled_time_end", v)} />
                     </Field>
                   </div>
                 )}

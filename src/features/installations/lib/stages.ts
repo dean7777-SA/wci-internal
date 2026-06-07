@@ -32,12 +32,12 @@ export const PRIORITY_CONFIG: Record<InstallationPriority, { label: string; colo
 export const OWNERS = ["Felicity", "Amelia", "Alana", "Michael", "Lorraine"] as const;
 export type Owner = typeof OWNERS[number];
 
-export const INSTALLERS = ["Simon", "Zizzi", "JHB Team"] as const;
+export const INSTALLERS = ["Simon", "Omar", "JHB Team"] as const;
 export type Installer = typeof INSTALLERS[number];
 
 export const INSTALLER_COLORS: Record<string, { bg: string; text: string; dot: string; chip: string }> = {
   "Simon":    { bg: "bg-blue-100",   text: "text-blue-700",   dot: "bg-blue-400",   chip: "bg-blue-200"   },
-  "Zizzi":    { bg: "bg-violet-100", text: "text-violet-700", dot: "bg-violet-400", chip: "bg-violet-200" },
+  "Omar":     { bg: "bg-violet-100", text: "text-violet-700", dot: "bg-violet-400", chip: "bg-violet-200" },
   "JHB Team": { bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-400", chip: "bg-orange-200" },
 };
 

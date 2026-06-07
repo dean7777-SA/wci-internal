@@ -69,7 +69,8 @@ export function InstallationSchedule() {
   return (
     <div className="flex flex-col h-full">
       {/* Sub-nav bar */}
-      <div className="flex items-center justify-between mb-4 gap-4 shrink-0 flex-wrap">
+      <div className="flex flex-col gap-2 mb-6 shrink-0">
+        {/* Row 1: tabs only */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
             {TABS.map(({ id, label, icon: Icon }) => (
@@ -84,23 +85,46 @@ export function InstallationSchedule() {
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Board/List toggle — only for Kanban tab */}
+        {/* Row 2: secondary controls */}
+        <div className="flex items-center gap-2">
+          {/* Board/List toggle — kanban only, now always on row 2 */}
           {activeTab === "kanban" && (
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-              {([{ id: "board" as KanbanSubView, icon: LayoutGrid }, { id: "list" as KanbanSubView, icon: List }]).map(({ id, icon: Icon }) => (
+              {([{ id: "board" as KanbanSubView, icon: LayoutGrid, label: "Board" }, { id: "list" as KanbanSubView, icon: List, label: "List" }]).map(({ id, icon: Icon, label }) => (
                 <button key={id} onClick={() => setKanbanView(id)}
-                  className={`flex items-center px-2.5 py-1.5 rounded-lg transition-all ${
-                    kanbanView === id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+                    kanbanView === id ? "bg-white text-gray-900 shadow-sm font-medium" : "text-gray-500 hover:text-gray-700"
                   }`}>
                   <Icon className="w-3.5 h-3.5" />
+                  {label}
                 </button>
               ))}
             </div>
           )}
 
-          {/* Installer multi-select filter */}
-          <div className="relative" ref={filterRef}>
+          {activeTab === "calendar" && (
+            <button
+              onClick={() => setShowSiteInspections((v) => !v)}
+              className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-colors shrink-0 ${
+                showSiteInspections
+                  ? "border-violet-600 bg-violet-600 text-white"
+                  : "border-gray-200 text-gray-500 hover:bg-gray-50"
+              }`}>
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-violet-100 text-violet-700 text-[9px] font-bold">SI</span>
+              Site Inspections
+            </button>
+          )}
+
+          <button onClick={() => setNewOpen(true)}
+            className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-xl bg-gray-900 text-white hover:bg-gray-700 transition-colors shrink-0">
+            <Plus className="w-3.5 h-3.5" />
+            New Installation
+          </button>
+
+          {/* All Installers dropdown — pushed to far right */}
+          <div className="relative ml-auto" ref={filterRef}>
             <button onClick={() => setFilterOpen((o) => !o)}
               className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-colors ${
                 installerFilter.length > 0
@@ -125,7 +149,7 @@ export function InstallationSchedule() {
             </button>
 
             {filterOpen && (
-              <div className="absolute top-full mt-1 left-0 z-50 bg-white rounded-xl border border-gray-200 shadow-lg p-2 min-w-[160px]">
+              <div className="absolute top-full mt-1 right-0 z-50 bg-white rounded-xl border border-gray-200 shadow-lg p-2 min-w-[160px]">
                 {INSTALLERS.map((name) => {
                   const c = installerColor(name);
                   const active = installerFilter.includes(name);
@@ -154,27 +178,7 @@ export function InstallationSchedule() {
               </div>
             )}
           </div>
-
-          {/* Site inspection toggle — calendar only */}
-          {activeTab === "calendar" && (
-            <button
-              onClick={() => setShowSiteInspections((v) => !v)}
-              className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-colors ${
-                showSiteInspections
-                  ? "border-violet-600 bg-violet-600 text-white"
-                  : "border-gray-200 text-gray-500 hover:bg-gray-50"
-              }`}>
-              <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-violet-100 text-violet-700 text-[9px] font-bold">SI</span>
-              Site Inspections
-            </button>
-          )}
         </div>
-
-        <button onClick={() => setNewOpen(true)}
-          className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-xl bg-gray-900 text-white hover:bg-gray-700 transition-colors shrink-0">
-          <Plus className="w-3.5 h-3.5" />
-          New Installation
-        </button>
       </div>
 
       {/* Views */}
@@ -196,7 +200,9 @@ export function InstallationSchedule() {
               <CalendarView installations={filtered} onChipClick={openDetail} showSiteInspections={showSiteInspections} />
             )}
             {activeTab === "dashboard" && (
-              <DashboardView installations={filtered} onCardClick={openDetail} />
+              <div className="overflow-y-auto h-full">
+                <DashboardView installations={filtered} onCardClick={openDetail} />
+              </div>
             )}
             {activeTab === "completed" && (
               <CompletedView installations={filtered} onRowClick={openDetail} />

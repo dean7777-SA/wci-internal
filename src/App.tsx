@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import { HashRedirect } from "@/components/HashRedirect";
@@ -54,7 +56,7 @@ function AppRoutes() {
       <Routes>
       <Route path="/login" element={user && home ? <Navigate to={home} replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/" element={<RequireRole roles={ADMIN_ROLES}><Dashboard /></RequireRole>} />
+      <Route path="/" element={<RequireRole roles={ADMIN_ROLES}><DashboardShell /></RequireRole>} />
       <Route path="/sales" element={<RequireRole roles={SALES_ROLES}><SalesDashboardShell /></RequireRole>} />
       <Route path="/projects" element={<RequireRole roles={SALES_ROLES}><ProjectsDashboardShell /></RequireRole>} />
       <Route path="/installations" element={<RequireRole roles={ALL_ROLES}><InstallationsShell /></RequireRole>} />
@@ -76,25 +78,89 @@ function TopNav() {
   const { profile, signOut } = useAuth();
   const role = profile?.role ?? "";
   const links = NAV_LINKS.filter(l => (l.roles as readonly string[]).includes(role));
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close on route change
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <img src="/wci-logo.png" alt="WCI" className="h-[28px] w-auto" />
-        <nav className="flex items-center gap-1">
-          {links.map(({ to, label }) => (
-            <Link key={to} to={to}
-              className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                pathname === to ? "bg-gray-900 text-white font-medium" : "text-gray-500 hover:bg-gray-100"
-              }`}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+    <>
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          <img src="/wci-logo.png" alt="WCI" className="h-[28px] w-auto" />
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {links.map(({ to, label }) => (
+              <Link key={to} to={to}
+                className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                  pathname === to ? "bg-gray-900 text-white font-medium" : "text-gray-500 hover:bg-gray-100"
+                }`}>
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        {/* Desktop user + signout */}
+        <div className="hidden md:flex items-center gap-4">
+          <span className="text-sm text-gray-500">{profile?.display_name ?? profile?.email}</span>
+          <button onClick={signOut} className="text-sm text-gray-500 hover:text-gray-900">Sign out</button>
+        </div>
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMenuOpen(o => !o)}
+          className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-500">{profile?.display_name ?? profile?.email}</span>
-        <button onClick={signOut} className="text-sm text-gray-500 hover:text-gray-900">Sign out</button>
-      </div>
+
+      {/* Mobile full-screen overlay */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col">
+          {/* Header row */}
+          <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+            <img src="/wci-logo.png" alt="WCI" className="h-[28px] w-auto" />
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {/* Nav links */}
+          <nav className="flex-1 flex flex-col gap-1 p-4">
+            {links.map(({ to, label }) => (
+              <Link key={to} to={to}
+                className={`text-base px-4 py-3 rounded-xl font-medium transition-colors ${
+                  pathname === to ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100"
+                }`}>
+                {label}
+              </Link>
+            ))}
+          </nav>
+          {/* User + sign out at bottom */}
+          <div className="p-4 border-t border-gray-100">
+            <p className="text-sm text-gray-500 mb-3 truncate">{profile?.display_name ?? profile?.email}</p>
+            <button
+              onClick={signOut}
+              className="w-full text-sm text-center py-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function DashboardShell() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <TopNav />
+      <Dashboard />
     </div>
   );
 }
@@ -112,7 +178,7 @@ function ProjectsDashboardShell() {
   return (
     <div className="min-h-screen bg-gray-50">
       <TopNav />
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-4 md:p-6 max-w-7xl mx-auto">
         <h1 className="text-lg font-semibold text-gray-900 mb-6">Projects</h1>
         <ProjectsDashboard />
       </div>
@@ -124,8 +190,8 @@ function InstallationsShell() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       <TopNav />
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-6 max-w-7xl mx-auto w-full">
-        <h1 className="text-lg font-semibold text-gray-900 mb-6 shrink-0">Installation Schedule</h1>
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-4 md:p-6 w-full">
+        <h1 className="text-lg font-semibold text-gray-900 mb-4 md:mb-6 shrink-0">Installation Schedule</h1>
         <InstallationSchedule />
       </div>
     </div>

@@ -22,6 +22,31 @@ interface InstallationDetailPanelProps {
 
 const inputClass = "w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-300 bg-white";
 
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 07–18
+const MINUTES = ["00", "15", "30", "45"];
+
+function TimeSelect({ value, onChange, small }: { value: string; onChange: (v: string) => void; small?: boolean }) {
+  const [h, m] = value ? value.split(":") : ["", ""];
+  const cls = small
+    ? "flex-1 px-1.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white"
+    : "flex-1 px-2 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white";
+  const handleH = (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value ? `${e.target.value}:${m || "00"}` : "");
+  const handleM = (e: React.ChangeEvent<HTMLSelectElement>) => onChange(h ? `${h}:${e.target.value}` : "");
+  return (
+    <div className="flex gap-1 items-center">
+      <select value={h} onChange={handleH} className={cls}>
+        <option value="">HH</option>
+        {HOURS.map((hr) => <option key={hr} value={String(hr).padStart(2, "0")}>{String(hr).padStart(2, "0")}</option>)}
+      </select>
+      <span className="text-gray-400 text-xs font-medium">:</span>
+      <select value={m} onChange={handleM} className={cls} disabled={!h}>
+        <option value="">MM</option>
+        {MINUTES.map((min) => <option key={min} value={min}>{min}</option>)}
+      </select>
+    </div>
+  );
+}
+
 type PanelTab = "details" | "checklist" | "snags";
 
 export function InstallationDetailPanel({ installation: inst, allInstallations, onClose }: InstallationDetailPanelProps) {
@@ -283,17 +308,11 @@ export function InstallationDetailPanel({ installation: inst, allInstallations, 
                         </div>
                         <div className="space-y-1">
                           <p className="text-[10px] text-gray-400">Start time</p>
-                          <input type="time"
-                            value={scheduleForm.scheduled_time_start}
-                            onChange={(e) => setScheduleForm(f => ({ ...f, scheduled_time_start: e.target.value }))}
-                            className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300" />
+                          <TimeSelect small value={scheduleForm.scheduled_time_start} onChange={(v) => setScheduleForm(f => ({ ...f, scheduled_time_start: v }))} />
                         </div>
                         <div className="space-y-1">
                           <p className="text-[10px] text-gray-400">End time</p>
-                          <input type="time"
-                            value={scheduleForm.scheduled_time_end}
-                            onChange={(e) => setScheduleForm(f => ({ ...f, scheduled_time_end: e.target.value }))}
-                            className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300" />
+                          <TimeSelect small value={scheduleForm.scheduled_time_end} onChange={(v) => setScheduleForm(f => ({ ...f, scheduled_time_end: v }))} />
                         </div>
                       </div>
                       <button

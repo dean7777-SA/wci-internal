@@ -45,7 +45,8 @@ function installationEndDate(inst: Installation): Date | null {
   return parseDate(inst.scheduled_end_date);
 }
 
-const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_HEADERS     = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_HEADERS_MOB = ["M",   "T",   "W",   "T",   "F",   "S",   "S"  ];
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -124,9 +125,10 @@ export function CalendarView({ installations, onChipClick, showSiteInspections =
     return (
       <div>
         <div className="grid grid-cols-7 border-l border-t border-gray-100">
-          {DAY_HEADERS.map((h) => (
+          {DAY_HEADERS.map((h, i) => (
             <div key={h} className="border-r border-b border-gray-100 py-2 text-center text-[11px] font-semibold text-gray-400 uppercase tracking-wide bg-gray-50">
-              {h}
+              <span className="hidden sm:inline">{h}</span>
+              <span className="sm:hidden">{DAY_HEADERS_MOB[i]}</span>
             </div>
           ))}
           {cells.map((d, i) => {
@@ -164,12 +166,12 @@ export function CalendarView({ installations, onChipClick, showSiteInspections =
                         title={inst.title}
                         className={`w-full text-left text-[10px] font-medium px-1.5 py-0.5 min-h-[18px] flex items-center gap-1 ${chipBg} text-gray-800 hover:opacity-80 transition-opacity
                           ${isMultiDay ? (isStart ? "rounded-l-full rounded-r-none" : isEnd ? "rounded-r-full rounded-l-none" : "rounded-none") : "rounded"}`}>
-                        {isStart && inst.installers?.[0] && (
+                        {inst.installers?.[0] && (
                           <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px] font-bold shrink-0 ${installerColor(inst.installers[0]).bg} ${installerColor(inst.installers[0]).text}`}>
                             {installerInitials(inst.installers[0])}
                           </span>
                         )}
-                        {isStart && <span className="truncate">{inst.title}</span>}
+                        <span className="truncate">{inst.title}</span>
                       </button>
                     );
                   })}
@@ -287,11 +289,11 @@ export function CalendarView({ installations, onChipClick, showSiteInspections =
   }
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col lg:flex-row gap-4">
       {/* Main calendar */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-x-auto">
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
           <div className="flex items-center gap-2">
             <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
               <ChevronLeft className="w-4 h-4 text-gray-500" />
@@ -299,7 +301,7 @@ export function CalendarView({ installations, onChipClick, showSiteInspections =
             <button onClick={() => navigate(1)} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
               <ChevronRight className="w-4 h-4 text-gray-500" />
             </button>
-            <span className="text-sm font-medium text-gray-900 min-w-[200px]">{navLabel}</span>
+            <span className="text-sm font-medium text-gray-900">{navLabel}</span>
             <button onClick={() => setCursor(new Date())} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
               Today
             </button>
@@ -319,8 +321,8 @@ export function CalendarView({ installations, onChipClick, showSiteInspections =
         {mode === "day" && <DayView />}
       </div>
 
-      {/* Unscheduled sidebar */}
-      <div className="w-[220px] shrink-0">
+      {/* Unscheduled — sidebar on desktop, section below on mobile */}
+      <div className="lg:w-[220px] lg:shrink-0">
         <div className="sticky top-0">
           <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-3">Unscheduled ({unscheduled.length})</p>
           {unscheduled.length === 0 ? (
