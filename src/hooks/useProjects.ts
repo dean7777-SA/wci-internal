@@ -116,19 +116,30 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: async (input: NewProjectInput) => {
       const { data: { user } } = await supabase.auth.getUser();
-      const ts = Date.now().toString().slice(-5);
-      const project_code = `P-${new Date().getFullYear()}-${ts}`;
-      const { data, error } = await supabase
-        .from("projects")
-        .insert({
-          ...input,
-          project_code,
-          created_by: user?.id ?? null,
-        } as any)
-        .select()
-        .single();
-      if (error) throw error;
-      return data as Project;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const { data, error } = await supabase
+          .from("projects")
+          .insert({
+            ...input,
+            project_code: "PENDING", // replaced by DB trigger
+            created_by: user?.id ?? null,
+          } as any)
+          .select()
+          .single();
+
+        if (!error) return data as Project;
+
+        const isProjectCodeConflict =
+          error.code === "23505" &&
+          (error.constraint === "projects_project_code_key" ||
+            /projects_project_code_key/i.test(error.message));
+
+        if (!isProjectCodeConflict || attempt === 2) {
+          throw error;
+        }
+      }
+
+      throw new Error("Failed to create project");
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: projectKeys.list() }),
   });
