@@ -129,10 +129,10 @@ export function useCreateProject() {
 
         if (!error) return data as Project;
 
+        const errorText = `${error.message} ${error.details ?? ""} ${error.hint ?? ""}`;
         const isProjectCodeConflict =
           error.code === "23505" &&
-          (error.constraint === "projects_project_code_key" ||
-            /projects_project_code_key/i.test(error.message));
+          /projects_project_code_key/i.test(errorText);
 
         if (!isProjectCodeConflict || attempt === 2) {
           throw error;
